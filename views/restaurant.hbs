@@ -1,20 +1,14 @@
-{{!-- <h1>id:{{id}}</h1> --}}
 <div class="container w-75 d-flex flex-column gap-4">
   <div class="d-flex gap-3">
-    <a href="/admin/restaurants" type="button" class="btn btn-secondary">
+    <a href="/restaurants" type="button" class="btn btn-secondary">
       <i class="fa-solid fa-arrow-left"></i>
     </a>
-    <a href="/admin/restaurants/{{restaurant.id}}/edit" type="button" class="btn btn-success">
-      <i class="fa-solid fa-pen"></i>
-    </a>
-    <form action="/admin/restaurants/{{restaurant.id}}?_method=DELETE" method="POST">
-      <button type="submit" class="btn btn-danger" onclick="return confirm('確定要刪除此餐廳')"><i class="fa-solid fa-trash-can"></i></button>
-    </form>
+    <a href="/restaurants/{{restaurant.id}}/dashboard" class="btn btn-primary">Dashboard</a>
   </div>
   <div class="row gap-3 gap-md-4">
     <div class="col-12 col-md">
       <div class="restaurant-img-container">
-        <img src={{restaurant.image}} alt="餐廳封面" class="image" onload="this.style.opacity=1;" onerror="this.src='/public/images/default-restaurant.jpg'">
+        <img src={{restaurant.image}} alt="餐廳" class="image" onload="this.style.opacity=1;" onerror="this.src='/public/images/default-restaurant.jpg'">
       </div>
     </div>
     <div class="col-12 col-md-6 d-flex flex-column gap-2">

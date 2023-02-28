@@ -1,7 +1,7 @@
 const express = require('express')
 const path = require('path') // Node.js 的原生模組
 const routes = require('./routes')
-const passport = require('./config/passpoet')
+const passport = require('./config/passport')
 const { getUser } = require('./helpers/auth-helpers')
 const hbsHelpers = require('./helpers/hbs-helpers') // 自製handlebars helpers
 

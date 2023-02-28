@@ -5,6 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Restaurant extends Model {
     static associate (models) {
+      Restaurant.belongsTo(models.Category, { foreignKey: 'categoryId' })
     }
   };
   Restaurant.init({
@@ -13,7 +14,8 @@ module.exports = (sequelize, DataTypes) => {
     address: DataTypes.STRING,
     openingHours: DataTypes.STRING,
     image: DataTypes.STRING,
-    description: DataTypes.TEXT
+    description: DataTypes.TEXT,
+    viewCounts: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Restaurant',
