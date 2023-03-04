@@ -1,6 +1,6 @@
 // 前台使用者用
 const { Restaurant, Category, Comment, User } = require('../models')
-const { nullCategoryHandle } = require('../helpers/object-helpers')
+const { nullCategoryHandle, descriptionCut } = require('../helpers/object-helpers')
 const { getOffset, getPagination } = require('../helpers/pagination-helper')
 
 const restaurantController = {
@@ -75,6 +75,60 @@ const restaurantController = {
         include: [Category]
       })
       res.render('dashboard', { restaurant })
+    } catch (err) {
+      next(err)
+    }
+  },
+  getFeeds: async (req, res, next) => {
+    const limit = 10
+    const order = [['createdAt', 'DESC']]
+    const [restData, commentData] = await Promise.all([
+      Restaurant.findAll({
+        limit,
+        order,
+        include: [Category],
+        raw: true,
+        nest: true
+      }),
+      Comment.findAll({
+        limit,
+        order,
+        include: [
+          User,
+          { model: Restaurant, include: Category }
+        ],
+        raw: true,
+        nest: true
+      })
+    ])
+    const restaurants = descriptionCut(restData)
+    const comments = descriptionCut(commentData)
+    res.render('feeds', { restaurants, comments })
+  },
+  getTopRestaurants: async (req, res, next) => {
+    try {
+      const restData = await Restaurant.findAll({
+        include: [
+          Category,
+          { model: User, as: 'FavoritedUsers' }
+        ]
+      })
+      const topRest = restData.map(r => {
+        r = r.toJSON()
+        return {
+          ...r,
+          favoritedCount: r.FavoritedUsers.length
+        }
+      })
+        .sort((a, b) => b.favoritedCount - a.favoritedCount)
+        .slice(0, 10)
+
+      const restaurants = topRest.map(r => ({
+        ...r,
+        description: r.description.length >= 40 ? r.description.substring(0, 40) + '...' : r.description,
+        isFavorite: req.user && r.FavoritedUsers.some(user => user.id === req.user.id)
+      }))
+      res.render('top-restaurants', { restaurants })
     } catch (err) {
       next(err)
     }

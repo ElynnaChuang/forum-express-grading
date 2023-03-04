@@ -1,6 +1,6 @@
 const passport = require('passport')
 const { v4: uuidv4 } = require('uuid')
-const { User, Comment, Restaurant, Favorite, Like } = require('../models')
+const { User, Comment, Restaurant, Favorite, Like, Followship } = require('../models')
 const { removesWhitespace } = require('../helpers/object-helpers')
 const { imgurFileHandler } = require('../helpers/file-helpers')
 const bcrypt = require('bcryptjs')
@@ -74,7 +74,7 @@ const userController = {
     res.redirect(`/users/${id}`)
   },
   addFavorite: async (req, res, next) => {
-    const restaurantId = req.params.id
+    const { restaurantId } = req.params
     const userId = req.user.id
     try {
       const [restaurant, favorite] = await Promise.all([
@@ -90,17 +90,16 @@ const userController = {
     }
   },
   removeFavorite: async (req, res, next) => {
-    const restaurantId = req.params.id
+    const { restaurantId } = req.params
     const userId = req.user.id
     try {
-      const restaurant = await Restaurant.findByPk(restaurantId)
-      if (!restaurant) throw new Error('此餐廳不存在')
-      const isRemoved = await Favorite.destroy({ where: { restaurantId, userId } }) // 回傳0 or 1
-      if (!isRemoved) throw new Error('尚未收藏此餐廳了')
-      res.redirect('back')
+      const favorite = await Favorite.findOne({ where: { restaurantId, userId } })
+      if (!favorite) throw new Error('尚未收藏此餐廳了')
+      return await favorite.destroy()
     } catch (err) {
       next(err)
     }
+    res.redirect('back')
   },
   addLike: async (req, res, next) => {
     const { restaurantId } = req.params
@@ -126,6 +125,52 @@ const userController = {
       if (!restaurant) throw new Error('此餐廳不存在')
       const removed = await Like.destroy({ where: { restaurantId, userId } })
       if (!removed) throw new Error('已經取消過讚了')
+      res.redirect('back')
+    } catch (err) {
+      next(err)
+    }
+  },
+  getTopUsers: async (req, res, next) => {
+    const usersData = await User.findAll({
+      include: [{ model: User, as: 'Followers' }],
+      limit: 10
+    })
+    const users = usersData.map(user => ({
+      ...user.toJSON(),
+      followerCount: user.Followers.length,
+      canFollowed: user.id !== req.user.id, // 讓hbs決定要不要顯示追蹤按鈕
+      isFollowed: req.user.Followings.some(f => f.id === user.id) // = user.Followers.some(f => f.id === req.user.id) (從我追的人裡找是否有此user = 從此user的追蹤者找是否有我)
+    })).sort((a, b) => b.followerCount - a.followerCount)
+    res.render('top-users', { users })
+  },
+  addFollowing: async (req, res, next) => {
+    const followerId = req.user.id
+    const followingId = req.params.id
+    try {
+      const [user, followship] = await Promise.all([
+        User.findByPk(followingId),
+        Followship.findOne({
+          where: { followerId, followingId }
+        })
+      ])
+      if (!user) throw new Error('該使用者不存在')
+      if (followship) throw new Error('已經追蹤過使用者了')
+      await Followship.create({ followerId, followingId })
+    } catch (err) {
+      next(err)
+    }
+    res.redirect('back')
+  },
+  removeFollowing: async (req, res, next) => {
+    const followerId = req.user.id
+    const followingId = req.params.id
+    try {
+      const user = await User.findByPk(followingId)
+      if (!user) throw new Error('該使用者不存在')
+      const removed = await Followship.destroy({
+        where: { followerId, followingId }
+      })
+      if (!removed) throw new Error('已取消追蹤過該使用者')
       res.redirect('back')
     } catch (err) {
       next(err)
