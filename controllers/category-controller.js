@@ -2,8 +2,8 @@ const { Category } = require('../models')
 
 const categoryController = {
   getCategories: async (req, res, next) => {
+    const { id } = req.params // 如果有的話會進入編輯模式
     try {
-      const { id } = req.params
       const categories = await Category.findAll({ raw: true })
       const category = id ? await Category.findByPk(id, { raw: true }) : null
       res.render('admin/categories', { categories, category })
@@ -11,19 +11,20 @@ const categoryController = {
       next(err)
     }
   },
-  postCategory: (req, res, next) => {
+  postCategory: async (req, res, next) => {
     const name = req.body.name.trim()
-    return Category.findOrCreate({
-      where: { name },
-      default: { name },
-      raw: true
-    })
-      .then(([category, created]) => {
-        if (!created) throw new Error('此分類已存在！')
-        req.flash('success_messages', `成功新增分類：${category.name}`)
-        res.redirect('/admin/categories')
+    try {
+      const [category, created] = await Category.findOrCreate({
+        where: { name },
+        default: { name },
+        raw: true
       })
-      .catch(err => next(err))
+      if (!created) throw new Error('此分類已存在！')
+      req.flash('success_messages', `成功新增分類：${category.name}`)
+      res.redirect('/admin/categories')
+    } catch (err) {
+      next(err)
+    }
   },
   putCategory: async (req, res, next) => {
     const { id } = req.params

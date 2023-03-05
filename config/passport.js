@@ -32,17 +32,21 @@ passport.use(new LocalStrategy(
 // 從user資料中撈ID
 passport.serializeUser((user, done) => done(null, user.id))
 // 以ID去撈user資料 (要資料庫回傳的資料寫這)
-passport.deserializeUser((id, done) => {
-  User.findByPk(id, {
-    include: [
-      { model: Restaurant, as: 'FavoritedRestaurants' },
-      { model: Restaurant, as: 'LikedRestaurants' },
-      { model: User, as: 'Followers' },
-      { model: User, as: 'Followings' }
-    ]
-  })
-    .then(user => done(null, user.toJSON()))
-    .catch(err => done(err, null))
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findByPk(id, {
+      include: [
+        { model: Restaurant, as: 'FavoritedRestaurants' },
+        { model: Restaurant, as: 'LikedRestaurants' },
+        { model: User, as: 'Followers' },
+        { model: User, as: 'Followings' }
+      ],
+      attributes: { exclude: ['password', 'createdAt', 'updatedAt'] }
+    })
+    return done(null, user.toJSON())
+  } catch (err) {
+    return done(err, null)
+  }
 })
 
 module.exports = passport

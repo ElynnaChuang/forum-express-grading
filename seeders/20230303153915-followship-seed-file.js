@@ -26,7 +26,6 @@ module.exports = {
         newUsers.splice(followingIndex, 1)
       }
     }
-    // console.log(result.map(r => r.followerId === r.followingId))
 
     await queryInterface.bulkInsert('Followships', result)
   },

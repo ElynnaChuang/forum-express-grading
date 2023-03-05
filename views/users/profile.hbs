@@ -19,7 +19,7 @@
               {{/ifCond}}
             </div>
             <div class="col-auto border-start">
-              <p><strong>已評論餐廳：</strong>{{user.Comments.length}}</p>
+              <p><strong>已評論餐廳：</strong>{{comments.length}}</p>
               {{!-- <p>已收藏餐廳：{{user.FavoritedRestaurants.length}}</p> --}}
               {{!-- <p>已說讚餐廳：{{user.LikedRestaurants.length}}</p> --}}
               {{!-- <p>Followers（跟隨者）：{{user.Followers.length}}</p> --}}
@@ -34,13 +34,13 @@
   <div class="row g-3">
     <div class="col d-flex flex-column gap-3">
       <div class="row card">
-        <div class="col card-header">已評論的餐廳 : {{user.Comments.length}} 個</div>
+        <div class="col card-header">已評論的餐廳 : {{comments.length}} 個</div>
         <div class="col card-body">
           <div class="row g-2">
-            {{#if user.Comments}}
-              {{#each user.Comments}}
+            {{#if comments}}
+              {{#each comments}}
                 <div class="col-2 col-lg-1">
-                  <a href="/restaurants/{{this.Restaurant.id}}" style="text-decoration:none">
+                  <a href="/restaurants/{{this.restaurantId}}" style="text-decoration:none">
                     <img class="rounded img-responsive center-block" src="{{this.Restaurant.image}}" style="width: 100%; transition: opacity 0.5s; opacity:0;" onload="this.style.opacity=1;">
                   </a>
                 </div>

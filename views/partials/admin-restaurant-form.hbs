@@ -16,12 +16,12 @@
           </div>
           <div class="col-12 col-lg">
             <label for="category" class="form-label">分類</label>
-            <select id="category" class="form-select" aria-label="category">
+            <select name="categoryId" id="category" class="form-select" aria-label="category">
               <option selected disabled>選擇餐廳分類</option>
               {{#each categories}}
-              <option value="{{this.id}}" {{#ifCond this.id ../restaurant.categoryId}}selected{{/ifCond}}>
-                {{this.name}}
-              </option>
+                <option value="{{this.id}}" {{#ifCond this.id ../restaurant.categoryId}}selected{{/ifCond}}>
+                  {{this.name}}
+                </option>
               {{/each}}
             </select>
           </div>
