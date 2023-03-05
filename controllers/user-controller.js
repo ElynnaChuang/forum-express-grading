@@ -1,8 +1,10 @@
+const Sequelize = require('sequelize')
 const passport = require('passport')
 const { v4: uuidv4 } = require('uuid')
 const { User, Comment, Restaurant, Favorite, Like, Followship } = require('../models')
 const { removesWhitespace } = require('../helpers/object-helpers')
 const { imgurFileHandler } = require('../helpers/file-helpers')
+const { getUser } = require('../helpers/auth-helpers')
 const bcrypt = require('bcryptjs')
 
 const userController = {
@@ -37,20 +39,29 @@ const userController = {
     res.redirect('/signin')
   },
   getUser: async (req, res, next) => {
-    const { id } = req.params
+    const userId = req.params.id
     try {
-      const user = await User.findByPk(id, {
-        include: { model: Comment, include: Restaurant }
+      const user = await User.findByPk(userId, { raw: true })
+      const comments = await Comment.findAll({
+        where: { userId },
+        include: [
+          { model: Restaurant, attributes: ['image'] }
+        ],
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('restaurant_id')), 'restaurantId']],
+        nest: true,
+        raw: true
       })
       if (!user) throw new Error('使用者不存在')
-      res.render('users/profile', { user: user.toJSON() })
+      res.render('users/profile', { user, comments })
     } catch (err) {
       next(err)
     }
   },
   editUser: async (req, res, next) => {
+    const loggedUserId = getUser(req).id
     const { id } = req.params
     try {
+      if (loggedUserId !== id) throw new Error('無編輯權限')
       const user = await User.findByPk(id, { raw: true })
       if (!user) throw new Error('使用者不存在')
       res.render('users/edit', { user })
@@ -59,8 +70,10 @@ const userController = {
     }
   },
   putUser: async (req, res, next) => {
+    const loggedUserId = req.user.id
     const { id } = req.params
     try {
+      if (loggedUserId !== id) throw new Error('無編輯權限')
       const user = await User.findByPk(id)
       if (!user) throw new Error('使用者不存在，更新失敗')
 
@@ -145,7 +158,7 @@ const userController = {
   },
   addFollowing: async (req, res, next) => {
     const followerId = req.user.id
-    const followingId = req.params.id
+    const followingId = req.params.userId
     try {
       const [user, followship] = await Promise.all([
         User.findByPk(followingId),
@@ -163,7 +176,7 @@ const userController = {
   },
   removeFollowing: async (req, res, next) => {
     const followerId = req.user.id
-    const followingId = req.params.id
+    const followingId = req.params.userId
     try {
       const user = await User.findByPk(followingId)
       if (!user) throw new Error('該使用者不存在')

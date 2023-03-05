@@ -15,7 +15,7 @@ const restaurantController = {
       const [restData, categories] = await Promise.all([
         Restaurant.findAndCountAll({
           where: categoryId ? { categoryId } : categoryId === 0 ? { categoryId: null } : {},
-          include: [Category],
+          include: [{ model: Category, attributes: ['name'] }],
           raw: true,
           nest: true,
           limit,
@@ -32,10 +32,7 @@ const restaurantController = {
         isFavorite: favoritedRestaurantsId.includes(r.id),
         isLike: likedRestaurantsId.includes(r.id),
         categoryId: r.categoryId || 0,
-        Category: {
-          ...r.Category,
-          name: r.Category.name || '未分類'
-        }
+        Category: { name: r.Category.name || '未分類' }
       }))
       res.render('restaurants', { restaurants, categories, categoryId, pagination, limit, limitOption })
     } catch (err) {
@@ -47,8 +44,11 @@ const restaurantController = {
     try {
       const data = await Restaurant.findByPk(id, {
         include: [
-          Category,
-          { model: Comment, include: User },
+          { model: Category, attributes: ['name'] },
+          {
+            model: Comment,
+            include: { model: User, attributes: ['id', 'name'] }
+          },
           { model: User, as: 'FavoritedUsers' },
           { model: User, as: 'LikedUsers' }
         ],
@@ -72,7 +72,7 @@ const restaurantController = {
       const restaurant = await Restaurant.findByPk(id, {
         raw: true,
         nest: true,
-        include: [Category]
+        include: { model: Category, attributes: ['name'] }
       })
       res.render('dashboard', { restaurant })
     } catch (err) {
@@ -86,7 +86,7 @@ const restaurantController = {
       Restaurant.findAll({
         limit,
         order,
-        include: [Category],
+        include: { model: Category, attributes: ['name'] },
         raw: true,
         nest: true
       }),
@@ -94,8 +94,12 @@ const restaurantController = {
         limit,
         order,
         include: [
-          User,
-          { model: Restaurant, include: Category }
+          { model: User, attributes: ['id', 'name'] },
+          {
+            model: Restaurant,
+            attributes: ['id', 'name', 'image'],
+            include: { model: Category, attributes: ['name'] }
+          }
         ],
         raw: true,
         nest: true
@@ -109,8 +113,12 @@ const restaurantController = {
     try {
       const restData = await Restaurant.findAll({
         include: [
-          Category,
-          { model: User, as: 'FavoritedUsers' }
+          { model: Category, attributes: ['name'] },
+          {
+            model: User,
+            as: 'FavoritedUsers',
+            attributes: ['id']
+          }
         ]
       })
       const topRest = restData.map(r => {
