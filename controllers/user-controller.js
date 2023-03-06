@@ -108,11 +108,11 @@ const userController = {
     try {
       const favorite = await Favorite.findOne({ where: { restaurantId, userId } })
       if (!favorite) throw new Error('尚未收藏此餐廳了')
-      return await favorite.destroy()
+      await favorite.destroy()
+      res.redirect('back')
     } catch (err) {
       next(err)
     }
-    res.redirect('back')
   },
   addLike: async (req, res, next) => {
     const { restaurantId } = req.params
