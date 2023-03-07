@@ -10,13 +10,22 @@ module.exports = {
       'SELECT id FROM Restaurants;',
       { type: queryInterface.sequelize.QueryTypes.SELECT }
     )
-
-    await queryInterface.bulkInsert('Favorites', Array.from({ length: 40 }, () => ({
-      user_id: users[Math.floor(Math.random() * users.length)].id,
-      restaurant_id: restaurants[Math.floor(Math.random() * restaurants.length)].id,
-      created_at: new Date(),
-      updated_at: new Date()
-    })))
+    const result = []
+    for (const user of users) {
+      const restsData = Array.from(restaurants)
+      const count = Math.floor(Math.random() * 5) + 1
+      for (let i = 0; i < count; i++) {
+        const restIndex = Math.floor(Math.random() * restsData.length)
+        result.push({
+          user_id: user.id,
+          restaurant_id: restsData[restIndex].id,
+          created_at: new Date(),
+          updated_at: new Date()
+        })
+        restsData.splice(restIndex, 1)
+      }
+    }
+    await queryInterface.bulkInsert('Favorites', result)
   },
 
   down: async (queryInterface, Sequelize) => {
