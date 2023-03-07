@@ -8,7 +8,7 @@
           </div>
         </div>
         <div class="col">
-          <div class="row h-100">
+          <div class="row h-100 gap-3">
             <div class="col-7 col-md-5 col-lg-3">
               <h3 class="mb-3">{{user.name}}</h3>
               <h6 class="mb-4">{{user.email}}</h6>
@@ -17,13 +17,25 @@
                   <a href="/users/{{user.id}}/edit" class="btn btn-secondary">Edit</a>
                 </div>
               {{/ifCond}}
+              {{#if user.canFollowed}}
+                {{#if user.isFollowed }}
+                  <form action="/following/{{user.id}}?_method=DELETE" method="POST" style="display: contents;">
+                    <button type="submit" class="btn btn-danger">取消追蹤</button>
+                  </form>
+                {{else}}
+                  <form action="/following/{{user.id}}" method="POST" style="display: contents;">
+                    <button type="submit" class="btn btn-primary">追蹤</button>
+                  </form>
+                {{/if}}
+              {{else}}
+              {{/if}}
             </div>
-            <div class="col-auto border-start">
+            <div class="col-auto border-md-start">
               <p><strong>已評論餐廳：</strong>{{comments.length}}</p>
-              {{!-- <p>已收藏餐廳：{{user.FavoritedRestaurants.length}}</p> --}}
-              {{!-- <p>已說讚餐廳：{{user.LikedRestaurants.length}}</p> --}}
-              {{!-- <p>Followers（跟隨者）：{{user.Followers.length}}</p> --}}
-              {{!-- <p>Followings（追蹤中）：{{user.Followings.length}}</p> --}}
+              <p><strong>已收藏餐廳：</strong>{{user.FavoritedRestaurants.length}}</p>
+              <p><strong>已說讚餐廳：</strong>{{user.LikedRestaurants.length}}</p>
+              <p><strong>Followers(跟隨者)：</strong>{{user.Followers.length}}</p>
+              <p><strong>Followings(追蹤中)：</strong>{{user.Followings.length}}</p>
             </div>
           </div>
         </div>
@@ -31,8 +43,53 @@
     </div>
   </div>
 
-  <div class="row g-3">
-    <div class="col d-flex flex-column gap-3">
+  <div class="row gap-3">
+    <div class="col-12 col-lg-4 d-flex flex-column gap-3">
+
+      <div class="row card">
+        <div class="col card-header">Followers(跟隨者)：{{user.Followers.length}} 個</div>
+        <div class="col card-body">
+          <div class="row g-2">
+            {{#if user.Followers.length}}
+              {{#each user.Followers}}
+                <div class="col-2">
+                  <a href="/users/{{this.id}}" style="text-decoration:none">
+                    <div class="user-img-container">
+                      <img src="{{this.image}}" alt="follower-image" class="image rounded" style="transition: opacity 0.5s; opacity:0;" onload="this.style.opacity=1;" onerror="this.src='/public/images/default-avatar.jpg'" />
+                    </div>
+                  </a>
+                </div>
+              {{/each}}
+            {{else}}
+              <p class="my-2">尚未有跟隨者</p>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+
+      <div class="row card">
+        <div class="col card-header">Followings(追蹤中)：{{user.Followings.length}} 個</div>
+        <div class="col card-body">
+          <div class="row g-2">
+            {{#if user.Followings.length}}
+              {{#each user.Followings}}
+                <div class="col-2">
+                  <a href="/users/{{this.id}}" style="text-decoration:none">
+                    <div class="user-img-container">
+                      <img src="{{this.image}}" alt="following-image" class="image rounded" style="transition: opacity 0.5s; opacity:0;" onload="this.style.opacity=1;" onerror="this.src='/public/images/default-avatar.jpg'" />
+                    </div>
+                  </a>
+                </div>
+              {{/each}}
+            {{else}}
+              <p class="my-2">尚未追蹤其他使用者</p>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md d-flex flex-column gap-3">
       <div class="row card">
         <div class="col card-header">已評論的餐廳 : {{comments.length}} 個</div>
         <div class="col card-body">
@@ -41,15 +98,61 @@
               {{#each comments}}
                 <div class="col-2 col-lg-1">
                   <a href="/restaurants/{{this.restaurantId}}" style="text-decoration:none">
-                    <img class="rounded img-responsive center-block" src="{{this.Restaurant.image}}" style="width: 100%; transition: opacity 0.5s; opacity:0;" onload="this.style.opacity=1;">
+                    <div class="user-img-container">
+                      <img src={{this.Restaurant.image}} alt="餐廳" class="image rounded" style="transition: opacity 0.5s; opacity:0;" onload="this.style.opacity=1;" onerror="this.src='/public/images/default-restaurant.jpg'" />
+                    </div>
                   </a>
                 </div>
               {{/each}}
             {{else}}
-              <p class="my-2">尚未評論餐廳</p>
+              <p class="my-2">尚未評論過餐廳</p>
             {{/if}}
           </div>
         </div>
       </div>
+
+      <div class="row card">
+        <div class="col card-header">已收藏餐廳 : {{user.FavoritedRestaurants.length}} 個</div>
+        <div class="col card-body">
+          <div class="row g-2">
+            {{#if user.FavoritedRestaurants.length}}
+              {{#each user.FavoritedRestaurants}}
+                <div class="col-2 col-lg-1">
+                  <a href="/restaurants/{{this.id}}" style="text-decoration:none">
+                    <div class="user-img-container">
+                      <img src={{this.image}} alt="favorite-restaurant" class="image rounded" style="transition: opacity 0.5s; opacity:0;" onload="this.style.opacity=1;" onerror="this.src='/public/images/default-restaurant.jpg'" />
+                    </div>
+                  </a>
+                </div>
+              {{/each}}
+            {{else}}
+              <p class="my-2">尚未收藏餐廳</p>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+
+      <div class="row card">
+        <div class="col card-header">已說讚餐廳 : {{user.LikedRestaurants.length}} 個</div>
+        <div class="col card-body">
+          <div class="row g-2">
+            {{#if user.LikedRestaurants.length}}
+              {{#each user.LikedRestaurants}}
+                <div class="col-2 col-lg-1">
+                  <a href="/restaurants/{{this.id}}" style="text-decoration:none">
+                    <div class="user-img-container">
+                      <img src={{this.image}} alt="like-restaurant" class="image rounded" style="transition: opacity 0.5s; opacity:0;" onload="this.style.opacity=1;" onerror="this.src='/public/images/default-restaurant.jpg'" />
+                    </div>
+                  </a>
+                </div>
+              {{/each}}
+            {{else}}
+              <p class="my-2">尚未按讚任何餐廳</p>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
+</div>

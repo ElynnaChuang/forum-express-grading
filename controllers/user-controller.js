@@ -40,8 +40,17 @@ const userController = {
   },
   getUser: async (req, res, next) => {
     const userId = req.params.id
+    const loggedUser = getUser(req)
     try {
-      const user = await User.findByPk(userId, { raw: true })
+      const userData = await User.findByPk(userId, {
+        include: [
+          { model: User, as: 'Followers', attributes: ['id', 'image'] },
+          { model: User, as: 'Followings', attributes: ['id', 'image'] },
+          { model: Restaurant, as: 'FavoritedRestaurants', attributes: ['id', 'image'] },
+          { model: Restaurant, as: 'LikedRestaurants', attributes: ['id', 'image'] }
+        ]
+      })
+      if (!userData) throw new Error('使用者不存在')
       const comments = await Comment.findAll({
         where: { userId },
         include: [
@@ -51,7 +60,11 @@ const userController = {
         nest: true,
         raw: true
       })
-      if (!user) throw new Error('使用者不存在')
+      const user = {
+        ...userData.toJSON(),
+        canFollowed: loggedUser.id !== userId,
+        isFollowed: loggedUser.Followings.some(following => following.id === userId)
+      }
       res.render('users/profile', { user, comments })
     } catch (err) {
       next(err)
